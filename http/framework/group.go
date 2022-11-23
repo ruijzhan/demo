@@ -5,6 +5,8 @@ type IGroup interface {
 	Post(string, ControllerHandler)
 	Put(string, ControllerHandler)
 	Delete(string, ControllerHandler)
+
+	Group(string) IGroup
 }
 
 func (c *Core) Group(prefix string) IGroup {
@@ -14,6 +16,10 @@ func (c *Core) Group(prefix string) IGroup {
 type Group struct {
 	core   *Core
 	prefix string
+}
+
+func (g *Group) Group(prefix string) IGroup {
+	return NewGroup(g.core, g.prefix+prefix)
 }
 
 func (g *Group) Get(uri string, h ControllerHandler) {
