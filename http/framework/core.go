@@ -7,24 +7,25 @@ import (
 )
 
 type Core struct {
-	router map[string]map[string]ControllerHandler
+	router map[string]*Tree
 }
 
 func NewCore() *Core {
 
 	return &Core{
-		router: map[string]map[string]ControllerHandler{
-			"GET":    {},
-			"POST":   {},
-			"PUT":    {},
-			"DELETE": {},
+		router: map[string]*Tree{
+			"GET":    NewTree(),
+			"POST":   NewTree(),
+			"PUT":    NewTree(),
+			"DELETE": NewTree(),
 		},
 	}
 }
 
 func (c *Core) addMethod(m, url string, h ControllerHandler) {
-	up := strings.ToUpper(url)
-	c.router[m][up] = h
+	if err := c.router[m].AddRouter(url, h); err != nil {
+		log.Fatalf("add router error %s %v", m, err)
+	}
 }
 
 func (c *Core) Get(url string, handler ControllerHandler) {
@@ -44,13 +45,12 @@ func (c *Core) Delete(url string, handler ControllerHandler) {
 }
 
 func (c *Core) FindRouteByRequest(r *http.Request) ControllerHandler {
-	m := strings.ToUpper(r.Method)
-	url := strings.ToUpper(r.URL.Path)
 
-	if mm, ok := c.router[m]; ok {
-		if h, ok := mm[url]; ok {
-			return h
-		}
+	m := strings.ToUpper(r.Method)
+	uri := strings.ToUpper(r.URL.Path)
+
+	if mh, ok := c.router[m]; ok {
+		return mh.FindHandler(uri)
 	}
 	return nil
 }
@@ -62,6 +62,7 @@ func (c *Core) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	handler := c.FindRouteByRequest(req)
 	if handler == nil {
 		ctx.Json(404, "not found")
+		return
 	}
 
 	if err := handler(ctx); err != nil {
