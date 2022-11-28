@@ -8,6 +8,8 @@ import (
 	"net/http"
 
 	"github.com/ruijzhan/demo/http/framework"
+	"github.com/ruijzhan/demo/http/framework/middleware"
+	// _ "net/http/pprof"
 )
 
 func main() {
@@ -16,6 +18,10 @@ func main() {
 	})
 
 	core := framework.NewCore()
+
+	core.Use(middleware.Test1(), middleware.Test2())
+
+	// go http.ListenAndServe("localhost:8082", nil)
 	registerRouter(core)
 	server := &http.Server{
 		Handler: core,

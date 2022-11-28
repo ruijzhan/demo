@@ -16,7 +16,8 @@ type Context struct {
 	request        *http.Request
 	responseWriter http.ResponseWriter
 	ctx            context.Context
-	handler        ControllerHandler
+	handlers       []ControllerHandler
+	index          int
 
 	hasTimeout bool
 	writerMux  *sync.Mutex
@@ -28,7 +29,23 @@ func NewContext(r *http.Request, w http.ResponseWriter) *Context {
 		responseWriter: w,
 		ctx:            r.Context(),
 		writerMux:      &sync.Mutex{},
+		index:          -1,
 	}
+}
+
+func (ctx *Context) Next() error {
+	// 因为中间件中会递归调用 Next(), 所以开头必须先移动下标
+	ctx.index++
+	if ctx.index < len(ctx.handlers) {
+		if err := ctx.handlers[ctx.index](ctx); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (ctx *Context) SetHandlers(h []ControllerHandler) {
+	ctx.handlers = h
 }
 
 // =========== base =================

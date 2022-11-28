@@ -7,7 +7,8 @@ import (
 )
 
 type Core struct {
-	router map[string]*Tree
+	router      map[string]*Tree
+	middlewares []ControllerHandler
 }
 
 func NewCore() *Core {
@@ -22,29 +23,34 @@ func NewCore() *Core {
 	}
 }
 
-func (c *Core) addMethod(m, url string, h ControllerHandler) {
-	if err := c.router[m].AddRouter(url, h); err != nil {
+func (c *Core) Use(middlewares ...ControllerHandler) {
+	c.middlewares = append(c.middlewares, middlewares...)
+}
+
+func (c *Core) addMethod(m, url string, handlers ...ControllerHandler) {
+	all := append(c.middlewares, handlers...)
+	if err := c.router[m].AddRouter(url, all); err != nil {
 		log.Fatalf("add router error %s %v", m, err)
 	}
 }
 
-func (c *Core) Get(url string, handler ControllerHandler) {
-	c.addMethod("GET", url, handler)
+func (c *Core) Get(url string, handlers ...ControllerHandler) {
+	c.addMethod("GET", url, handlers...)
 }
 
-func (c *Core) Post(url string, handler ControllerHandler) {
-	c.addMethod("POST", url, handler)
+func (c *Core) Post(url string, handlers ...ControllerHandler) {
+	c.addMethod("POST", url, handlers...)
 }
 
-func (c *Core) Put(url string, handler ControllerHandler) {
-	c.addMethod("PUT", url, handler)
+func (c *Core) Put(url string, handlers ...ControllerHandler) {
+	c.addMethod("PUT", url, handlers...)
 }
 
-func (c *Core) Delete(url string, handler ControllerHandler) {
-	c.addMethod("DELETE", url, handler)
+func (c *Core) Delete(url string, handlers ...ControllerHandler) {
+	c.addMethod("DELETE", url, handlers...)
 }
 
-func (c *Core) FindRouteByRequest(r *http.Request) ControllerHandler {
+func (c *Core) FindRouteByRequest(r *http.Request) []ControllerHandler {
 
 	m := strings.ToUpper(r.Method)
 	uri := strings.ToUpper(r.URL.Path)
@@ -59,13 +65,15 @@ func (c *Core) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	log.Println("core.ServeHTTP")
 	ctx := NewContext(req, resp)
 
-	handler := c.FindRouteByRequest(req)
-	if handler == nil {
+	handlers := c.FindRouteByRequest(req)
+	if handlers == nil {
 		ctx.Json(404, "not found")
 		return
 	}
 
-	if err := handler(ctx); err != nil {
+	ctx.SetHandlers(handlers)
+
+	if err := ctx.Next(); err != nil {
 		ctx.Json(500, "internal error")
 		return
 	}
