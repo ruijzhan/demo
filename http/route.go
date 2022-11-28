@@ -8,7 +8,7 @@ import (
 )
 
 func registerRouter(core *framework.Core) {
-	core.Get("/user/login", middleware.Test3(), UserLoginController)
+	core.Get("/user/login", middleware.Timeout(time.Second), UserLoginController)
 
 	subjectApi := core.Group("/subject")
 	{

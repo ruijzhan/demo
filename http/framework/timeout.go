@@ -42,9 +42,3 @@ func TimeoutHandler(f ControllerHandler, d time.Duration) ControllerHandler {
 		return nil
 	}
 }
-
-func Timeout(d time.Duration) ControllerHandler {
-	return func(c *Context) error {
-		return nil
-	}
-}
