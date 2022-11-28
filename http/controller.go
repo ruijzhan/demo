@@ -24,7 +24,7 @@ func FooControllerHandler(c *framework.Context) error {
 			}
 		}()
 
-		// time.Sleep(10 * time.Second)
+		time.Sleep(10 * time.Second)
 		c.Json(200, "ok")
 		finish <- struct{}{}
 	}()
@@ -46,5 +46,11 @@ func FooControllerHandler(c *framework.Context) error {
 		fmt.Println("finished")
 	}
 
+	return nil
+}
+
+func FooControllerHandler2(c *framework.Context) error {
+	time.Sleep(10 * time.Second)
+	c.Json(200, "ok")
 	return nil
 }

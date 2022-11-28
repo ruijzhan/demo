@@ -1,9 +1,13 @@
 package main
 
-import "github.com/ruijzhan/demo/http/framework"
+import (
+	"time"
+
+	"github.com/ruijzhan/demo/http/framework"
+)
 
 func registerRouter(core *framework.Core) {
-	core.Get("/user/login", UserLoginController)
+	core.Get("/user/login", framework.TimeoutHandler(UserLoginController, time.Second))
 
 	subjectApi := core.Group("/subject")
 	{
@@ -17,4 +21,6 @@ func registerRouter(core *framework.Core) {
 			subjectInnerApi.Get("/name", SubjectNameController)
 		}
 	}
+
+	core.Get("/foo", framework.TimeoutHandler(FooControllerHandler2, time.Second))
 }
