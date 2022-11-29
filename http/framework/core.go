@@ -62,7 +62,6 @@ func (c *Core) FindRouteByRequest(r *http.Request) []ControllerHandler {
 }
 
 func (c *Core) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	log.Println("core.ServeHTTP")
 	ctx := NewContext(req, resp)
 
 	handlers := c.FindRouteByRequest(req)
