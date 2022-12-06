@@ -25,7 +25,7 @@ func FooControllerHandler(c *framework.Context) error {
 		}()
 
 		time.Sleep(10 * time.Second)
-		c.Json(200, "ok")
+		c.SetStatus(200).Json("ok")
 		finish <- struct{}{}
 	}()
 
@@ -33,13 +33,12 @@ func FooControllerHandler(c *framework.Context) error {
 	case p := <-panicChan:
 		c.WriterMux().Lock()
 		defer c.WriterMux().Unlock()
-
-		c.Json(500, p)
+		c.SetStatus(500).Json(p)
 	case <-dc.Done():
 		c.WriterMux().Lock()
 		defer c.WriterMux().Unlock()
 
-		c.Json(500, "timeout")
+		c.SetStatus(500).Json("timeout")
 
 		c.SetHasTimeout()
 	case <-finish:
@@ -51,6 +50,6 @@ func FooControllerHandler(c *framework.Context) error {
 
 func FooControllerHandler2(c *framework.Context) error {
 	time.Sleep(10 * time.Second)
-	c.Json(200, "ok")
+	// c.Json(200, "ok")
 	return nil
 }

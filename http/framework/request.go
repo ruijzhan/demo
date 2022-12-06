@@ -128,7 +128,10 @@ func (ctx *Context) Query(key string) interface{} {
 // 路由匹配中带的参数
 // 形如 /book/:id
 func (ctx *Context) ParamInt(key string, def int) (int, bool) {
-	panic("not implemented") // TODO: Implement
+	if val := ctx.Param(key); val != nil {
+		return cast.ToInt(val), true
+	}
+	return def, false
 }
 
 func (ctx *Context) ParamInt64(key string, def int64) (int64, bool) {
@@ -152,7 +155,12 @@ func (ctx *Context) ParamString(key string, def string) (string, bool) {
 }
 
 func (ctx *Context) Param(key string) interface{} {
-	panic("not implemented") // TODO: Implement
+	if ctx.params != nil {
+		if val, ok := ctx.params[key]; ok {
+			return val
+		}
+	}
+	return nil
 }
 
 func (ctx *Context) FormInt64(key string, def int64) (int64, bool) {
@@ -228,15 +236,15 @@ func (ctx *Context) Cookie(key string) (string, bool) {
 	panic("not implemented") // TODO: Implement
 }
 
-func (ctx *Context) QueryString(key string, def string) string {
+func (ctx *Context) QueryString(key string, def string) (string, bool) {
 	params := ctx.QueryAll()
 	if vals, ok := params[key]; ok {
 		len := len(vals)
 		if len > 0 {
-			return vals[len-1]
+			return vals[len-1], true
 		}
 	}
-	return def
+	return def, false
 }
 
 func (ctx *Context) QueryArray(key string, def []string) []string {

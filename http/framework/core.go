@@ -61,19 +61,33 @@ func (c *Core) FindRouteByRequest(r *http.Request) []ControllerHandler {
 	return nil
 }
 
+func (c *Core) FindRouteNodeByRequest(req *http.Request) *node {
+	uri := req.URL.Path
+	method := strings.ToUpper(req.Method)
+
+	if h, ok := c.router[method]; ok {
+		return h.root.matchNode(uri)
+	}
+
+	return nil
+}
+
 func (c *Core) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	ctx := NewContext(req, resp)
 
-	handlers := c.FindRouteByRequest(req)
-	if handlers == nil {
-		ctx.Json(404, "not found")
+	node := c.FindRouteNodeByRequest(req)
+	if node == nil {
+		ctx.SetStatus(404).Json("not found")
 		return
 	}
 
-	ctx.SetHandlers(handlers)
+	ctx.SetHandlers(node.handlers)
+
+	parems := node.parseParamsFromEndNode(req.URL.Path)
+	ctx.SetParams(parems)
 
 	if err := ctx.Next(); err != nil {
-		ctx.Json(500, "internal error")
+		ctx.SetStatus(500).Json("internal error")
 		return
 	}
 

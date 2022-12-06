@@ -29,7 +29,7 @@ func Timeout(d time.Duration) framework.ControllerHandler {
 		select {
 		case <-chFinish:
 		case <-dc.Done():
-			c.Json(500, "Time out")
+			c.SetStatus(500).Json("Time out")
 			c.SetHasTimeout()
 		case p := <-chPanic:
 			panic(p)

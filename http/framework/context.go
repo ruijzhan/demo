@@ -17,6 +17,8 @@ type Context struct {
 
 	hasTimeout bool
 	writerMux  *sync.Mutex
+
+	params map[string]string
 }
 
 func NewContext(r *http.Request, w http.ResponseWriter) *Context {
@@ -132,4 +134,8 @@ func (ctx *Context) FormAll() map[string][]string {
 
 	return make(map[string][]string)
 
+}
+
+func (ctx *Context) SetParams(params map[string]string) {
+	ctx.params = params
 }

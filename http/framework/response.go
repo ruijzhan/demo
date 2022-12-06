@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"net/http"
+	"text/template"
 
 	"io"
 )
@@ -43,7 +46,37 @@ type IResponse interface {
 
 // Jsonp 输出
 func (ctx *Context) Jsonp(obj interface{}) IResponse {
-	panic("not implemented") // TODO: Implement
+	// 获取请求参数 callback
+	callbackFunc, _ := ctx.QueryString("callback", "callback_function")
+	ctx.SetHeader("Content-Type", "application/javascript")
+	// 输出到前端页面的时候需要注意下进行字符过滤，否则有可能造成 XSS 攻击
+	callback := template.JSEscapeString(callbackFunc)
+
+	// 输出函数名
+	_, err := ctx.responseWriter.Write([]byte(callback))
+	if err != nil {
+		return ctx
+	}
+	// 输出左括号
+	_, err = ctx.responseWriter.Write([]byte("("))
+	if err != nil {
+		return ctx
+	}
+	// 数据函数参数
+	ret, err := json.Marshal(obj)
+	if err != nil {
+		return ctx
+	}
+	_, err = ctx.responseWriter.Write(ret)
+	if err != nil {
+		return ctx
+	}
+	// 输出右括号
+	_, err = ctx.responseWriter.Write([]byte(")"))
+	if err != nil {
+		return ctx
+	}
+	return ctx
 }
 
 // xml 输出
@@ -52,8 +85,19 @@ func (ctx *Context) Xml(obj interface{}) IResponse {
 }
 
 // html 输出
-func (ctx *Context) Html(template string, obj interface{}) IResponse {
-	panic("not implemented") // TODO: Implement
+func (ctx *Context) Html(file string, obj interface{}) IResponse {
+	// 读取模版文件，创建 template 实例
+	t, err := template.New("output").ParseFiles(file)
+	if err != nil {
+		return ctx
+	}
+	// 执行 Execute 方法将 obj 和模版进行结合
+	if err := t.Execute(ctx.responseWriter, obj); err != nil {
+		return ctx
+	}
+
+	ctx.SetHeader("Content-Type", "application/html")
+	return ctx
 }
 
 // 重定向
@@ -63,7 +107,8 @@ func (ctx *Context) Redirect(path string) IResponse {
 
 // header
 func (ctx *Context) SetHeader(key string, val string) IResponse {
-	panic("not implemented") // TODO: Implement
+	ctx.responseWriter.Header().Add(key, val)
+	return ctx
 }
 
 // Cookie
@@ -73,7 +118,8 @@ func (ctx *Context) SetCookie(key string, val string, maxAge int, path string, d
 
 // 设置状态码
 func (ctx *Context) SetStatus(code int) IResponse {
-	panic("not implemented") // TODO: Implement
+	ctx.responseWriter.WriteHeader(code)
+	return ctx
 }
 
 // 设置 200 状态
@@ -89,8 +135,9 @@ func (ctx *Context) BindJson(obj interface{}) error {
 		if err != nil {
 			return err
 		}
-		//TODO: close body here?
+
 		ctx.request.Body = io.NopCloser(bytes.NewBuffer(body))
+
 		err = json.Unmarshal(body, obj)
 		if err != nil {
 			return err
@@ -101,25 +148,23 @@ func (ctx *Context) BindJson(obj interface{}) error {
 	return nil
 }
 
-func (ctx *Context) Json(status int, obj interface{}) error {
-	if ctx.HasTimeout() {
-		return nil
-	}
-	ctx.responseWriter.Header().Set("Content-Type", "application/json")
-	ctx.responseWriter.WriteHeader(status)
+func (ctx *Context) Json(obj interface{}) IResponse {
 	byt, err := json.Marshal(obj)
 	if err != nil {
-		ctx.responseWriter.WriteHeader(500)
-		return err
+		return ctx.SetStatus(http.StatusInternalServerError)
 	}
-	_, err = ctx.responseWriter.Write(byt)
-	return err
+	ctx.SetHeader("Content-Type", "application/json")
+	ctx.responseWriter.Write(byt)
+	return ctx
 }
 
 func (ctx *Context) HTML(status int, obj interface{}, template string) error {
 	return nil
 }
 
-func (ctx *Context) Text(status int, obj string) error {
-	return nil
+func (ctx *Context) Text(format string, values ...interface{}) IResponse {
+	out := fmt.Sprintf(format, values...)
+	ctx.SetHeader("Content-Type", "application/text")
+	ctx.responseWriter.Write([]byte(out))
+	return ctx
 }
