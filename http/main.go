@@ -4,8 +4,13 @@ import (
 	"context"
 	"fmt"
 	"html"
+	"log"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/ruijzhan/demo/http/framework"
 	"github.com/ruijzhan/demo/http/framework/middleware"
@@ -34,5 +39,19 @@ func main() {
 		},
 	}
 
-	server.ListenAndServe()
+	go func() {
+		server.ListenAndServe()
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	<-quit
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatal("Server shutdown:", err)
+	}
 }
