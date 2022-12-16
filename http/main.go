@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ruijzhan/demo/http/framework"
+	"github.com/ruijzhan/demo/http/framework/gin"
 	"github.com/ruijzhan/demo/http/framework/middleware"
 	// _ "net/http/pprof"
 )
@@ -22,9 +22,10 @@ func main() {
 		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
 	})
 
-	core := framework.NewCore()
+	core := gin.New()
 
-	core.Use(middleware.Recovery(), middleware.Cost())
+	core.Use(gin.Recovery())
+	core.Use(middleware.Cost())
 
 	// go http.ListenAndServe("localhost:8082", nil)
 	registerRouter(core)

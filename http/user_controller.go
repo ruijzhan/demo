@@ -1,10 +1,7 @@
 package main
 
-import (
-	"github.com/ruijzhan/demo/http/framework"
-)
+import "github.com/ruijzhan/demo/http/framework/gin"
 
-func UserLoginController(c *framework.Context) error {
-	c.SetStatus(200).Json("ok, UserLoginController")
-	return nil
+func UserLoginController(c *gin.Context) {
+	c.ISetOkStatus().IJson("ok, UserLoginController")
 }

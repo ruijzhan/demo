@@ -2,13 +2,15 @@ package middleware
 
 import (
 	"context"
+	"fmt"
+	"log"
 	"time"
 
-	"github.com/ruijzhan/demo/http/framework"
+	"github.com/ruijzhan/demo/http/framework/gin"
 )
 
-func Timeout(d time.Duration) framework.ControllerHandler {
-	return func(c *framework.Context) error {
+func Timeout(d time.Duration) gin.HandlerFunc {
+	return func(c *gin.Context) {
 
 		dc, cancel := context.WithTimeout(c.BaseContext(), d)
 		defer cancel()
@@ -28,13 +30,14 @@ func Timeout(d time.Duration) framework.ControllerHandler {
 
 		select {
 		case <-chFinish:
+			fmt.Println("finish")
 		case <-dc.Done():
-			c.SetStatus(500).Json("Time out")
-			c.SetHasTimeout()
+			c.ISetStatus(500).IJson("Time out")
+			// c.SetHasTimeout()
 		case p := <-chPanic:
-			panic(p)
+			c.ISetStatus(500).IJson("Time out")
+			log.Println(p)
 		}
 
-		return nil
 	}
 }
