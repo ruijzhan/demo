@@ -14,6 +14,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ruijzhan/demo/http/framework"
 	"github.com/ruijzhan/demo/http/framework/gin/internal/bytesconv"
 	"github.com/ruijzhan/demo/http/framework/gin/render"
 	"golang.org/x/net/http2"
@@ -164,6 +165,8 @@ type Engine struct {
 	maxSections      uint16
 	trustedProxies   []string
 	trustedCIDRs     []*net.IPNet
+
+	container framework.Container
 }
 
 var _ IRouter = (*Engine)(nil)
@@ -200,6 +203,8 @@ func New() *Engine {
 		secureJSONPrefix:       "while(1);",
 		trustedProxies:         []string{"0.0.0.0/0", "::/0"},
 		trustedCIDRs:           defaultTrustedCIDRs,
+
+		container: framework.NewMyContainer(),
 	}
 	engine.RouterGroup.engine = engine
 	engine.pool.New = func() any {
@@ -228,7 +233,7 @@ func (engine *Engine) Handler() http.Handler {
 func (engine *Engine) allocateContext(maxParams uint16) *Context {
 	v := make(Params, 0, maxParams)
 	skippedNodes := make([]skippedNode, 0, engine.maxSections)
-	return &Context{engine: engine, params: &v, skippedNodes: &skippedNodes}
+	return &Context{engine: engine, params: &v, skippedNodes: &skippedNodes, container: engine.container}
 }
 
 // Delims sets template left and right delims and returns an Engine instance.
