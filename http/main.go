@@ -14,6 +14,7 @@ import (
 
 	"github.com/ruijzhan/demo/http/framework/gin"
 	"github.com/ruijzhan/demo/http/framework/middleware"
+	"github.com/ruijzhan/demo/http/provider/demo"
 	// _ "net/http/pprof"
 )
 
@@ -23,6 +24,8 @@ func main() {
 	})
 
 	core := gin.New()
+
+	core.Bind(&demo.DemoServiceProvider{})
 
 	core.Use(gin.Recovery())
 	core.Use(middleware.Cost())

@@ -82,8 +82,8 @@ func (c *MyContainer) MakeNew(key string, params []any) (any, error) {
 }
 
 func (c *MyContainer) make(key string, params []any, forceNew bool) (any, error) {
-	c.lock.Lock()
-	defer c.lock.Unlock()
+	c.lock.RLock()
+	defer c.lock.RUnlock()
 
 	sp := c.findServiceProvider(key)
 	if sp == nil {
@@ -109,8 +109,8 @@ func (c *MyContainer) make(key string, params []any, forceNew bool) (any, error)
 }
 
 func (c *MyContainer) findServiceProvider(key string) ServiceProvider {
-	c.lock.Lock()
-	defer c.lock.Unlock()
+	c.lock.RLock()
+	defer c.lock.RUnlock()
 	if sp, ok := c.providers[key]; ok {
 		return sp
 	}
