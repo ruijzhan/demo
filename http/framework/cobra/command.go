@@ -27,6 +27,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/ruijzhan/demo/http/framework"
 	flag "github.com/spf13/pflag"
 )
 
@@ -46,6 +47,10 @@ type Group struct {
 // you to define the usage and description as part of your command
 // definition to ensure usability.
 type Command struct {
+
+	// 服务容器
+	container framework.Container
+
 	// Use is the one-line usage message.
 	// Recommended syntax is as follows:
 	//   [ ] identifies an optional argument. Arguments that are not enclosed in brackets are required.
