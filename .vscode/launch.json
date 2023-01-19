@@ -5,6 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch any",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${relativeFileDirname}"
+        },
+        {
             "name": "Launch Http",
             "type": "go",
             "request": "launch",
