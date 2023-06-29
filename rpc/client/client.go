@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"net/rpc"
@@ -19,25 +20,28 @@ func (p *HelloServiceClient) Hello(request string, reply *string) error {
 	return p.Call(myrpc.HelloServiceName+".Hello", request, reply)
 }
 
-// DialHelloService creates a new client to communicate with the HelloService using the given network and address.
+// NewHelloServiceClient dials a HelloServiceClient using the given network and address.
 //
-// network: a string representing the network protocol to use (e.g. "tcp", "udp").
-// address: a string representing the network address to connect to (e.g. "localhost:1234").
-//
-// *HelloServiceClient: a pointer to a new instance of HelloServiceClient.
-// error: if there was an error dialing the service, it will be returned.
-func DialHelloService(network, address string) (*HelloServiceClient, error) {
+// network: The network protocol to use.
+// address: The address of the service to dial.
+// (*HelloServiceClient, error): Returns a client to the HelloService and an error.
+func NewHelloServiceClient(network, address string) (*HelloServiceClient, error) {
+	if network != "tcp" && network != "udp" {
+		return nil, fmt.Errorf("network must be tcp or udp")
+	}
+
 	conn, err := net.Dial(network, address)
 	if err != nil {
 		return nil, err
 	}
+	defer conn.Close()
 
 	cli := rpc.NewClientWithCodec(jsonrpc.NewClientCodec(conn))
 	return &HelloServiceClient{Client: cli}, nil
 }
 
 func main() {
-	cli, err := DialHelloService("tcp", "localhost:1234")
+	cli, err := NewHelloServiceClient("tcp", "localhost:1234")
 	if err != nil {
 		log.Fatal("DialHelloService error:", err)
 	}

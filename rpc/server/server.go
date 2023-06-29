@@ -9,13 +9,13 @@ import (
 	myprc "github.com/ruijzhan/demo/rpc"
 )
 
-// RegisterHelloService registers the given HelloServiceInterface with the
-// rpc server under the name HelloServiceName.
+// RegisterHelloService registers the implementation of the HelloServiceInterface
+// as the HelloServiceName with the rpc server
 //
-// srv: the implementation of the HelloServiceInterface to be registered.
-// returns an error in case of any issues during registration.
+// service: the implementation of the HelloServiceInterface to be registered.
+// returns an error if there are any issues during registration.
 func RegisterHelloService(service myprc.HelloServiceInterface) error {
-    return rpc.RegisterName(myprc.HelloServiceName, service)
+	return rpc.RegisterName(myprc.HelloServiceName, service)
 }
 
 type HelloService struct{}
@@ -31,12 +31,10 @@ func main() {
 	RegisterHelloService(&HelloService{})
 
 	http.HandleFunc("/jsonrpc", func(w http.ResponseWriter, r *http.Request) {
-		conn := struct {
+		rpc.ServeRequest(jsonrpc.NewServerCodec(struct {
 			io.Writer
 			io.ReadCloser
-		}{w, r.Body}
-
-		rpc.ServeRequest(jsonrpc.NewServerCodec(conn))
+		}{w, r.Body}))
 	})
 
 	http.ListenAndServe(":1234", nil)
