@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package proto;
+
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.FieldOptions {
+	string default_string = 50000;
+	int32 default_int = 50001;
+}
+
+message Message {
+	string name = 1 [(default_string) = "gopher"];
+	int32 age = 2 [(default_int) = 10];
+
+}
+
+message String {
+	string value = 1;
+}
+
+service HelloService {
+	rpc Hello (String) returns (String);
+
+	rpc Channel (stream String) returns (stream String);
+
+}
+
+service PubsubService {
+	rpc Publish (String) returns (String);
+	rpc Subscribe (String) returns (stream String);
+}

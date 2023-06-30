@@ -15,6 +15,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/mattn/go-isatty v0.0.16
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/moby/pubsub v1.0.0
 	github.com/pelletier/go-toml/v2 v2.0.6
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/sourcegraph/conc v0.1.0
@@ -24,7 +25,7 @@ require (
 	github.com/ugorji/go/codec v1.2.7
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
 	golang.org/x/net v0.7.0
-	google.golang.org/grpc v1.45.0
+	google.golang.org/grpc v1.48.0
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1

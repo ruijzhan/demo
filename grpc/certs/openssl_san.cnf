@@ -1,0 +1,22 @@
+[req]
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+prompt = no
+
+[req_distinguished_name]
+C = CN
+ST = Sichuan
+L = Chengdu
+O = QiuDog
+OU = Home
+CN = server.grpc.io
+
+[v3_req]
+keyUsage = keyEncipherment, dataEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = server.grpc.io
+DNS.2 = client.grpc.io
+DNS.3 = localhost
