@@ -3,19 +3,50 @@ package main
 import (
 	context "context"
 	"fmt"
+	"io"
 	"log"
-	"net"
 	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type HelloServiceImpl struct{}
+func runClient() error {
+	conn, err := grpc.Dial(":1234", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
 
-func (p *HelloServiceImpl) Hello(ctx context.Context, in *String) (*String, error) {
-	reply := &String{Value: "Hello: " + in.GetValue()}
-	return reply, nil
+	client := NewHelloServiceClient(conn)
+	stream, err := client.Channel(context.Background())
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		for i := 0; i < 100000; i++ {
+			msg := &String{Value: fmt.Sprintf("World: %d", i)}
+			if err := stream.Send(msg); err != nil {
+				log.Fatal(err)
+			}
+		}
+		// time.Sleep(time.Second)
+		stream.CloseSend()
+	}()
+
+	for {
+		reply, err := stream.Recv()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return err
+		}
+		fmt.Println(reply.GetValue())
+	}
+
+	return nil
 }
 
 func main() {
@@ -27,41 +58,7 @@ func main() {
 
 	_ = runClient()
 
-	chStop <- struct{}{}
+	close(chStop)
+
 	time.Sleep(time.Second)
-}
-
-func runServer(chStop <-chan struct{}) error {
-	server := grpc.NewServer()
-	RegisterHelloServiceServer(server, &HelloServiceImpl{})
-
-	listener, err := net.Listen("tcp", ":1234")
-	if err != nil {
-		return err
-	}
-
-	go server.Serve(listener)
-	go func() {
-		<-chStop
-		listener.Close()
-		fmt.Println("Server stopped.")
-	}()
-	return nil
-}
-
-func runClient() error {
-	conn, err := grpc.Dial(":1234", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
-	client := NewHelloServiceClient(conn)
-	reply, err := client.Hello(context.Background(), &String{Value: "world!"})
-	if err != nil {
-		return err
-	}
-	fmt.Println(reply.GetValue())
-
-	return nil
 }
